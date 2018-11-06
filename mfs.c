@@ -70,7 +70,7 @@ int32_t   FirstSectorofCluster=0;
 
 int rootDir=0;
 int curDir=0;
-int i, inside=0, ad=0; //inside is if u inside the dir, if its found, if not the input dir dont exist
+int i, inside=0, ad=0, get=0; //inside is if u inside the dir, if its found, if not the input dir dont exist
 //ad for the current directory being used (ad for address when passed to LBAToOffset)
 
 struct __attribute__((__packed__)) DirectoryEntry
@@ -438,7 +438,7 @@ int main()
           int file_size;
           int LowClusterNumber = dir[i].DIR_FirstClusterLow;
           printf("lowCluster is %d of %.11s\n", dir[i].DIR_FirstClusterLow, dir[i].DIR_NAME);
-          int offset = LBAtoOffset(LowClusterNumber);
+          int offset = LBAToOffset(LowClusterNumber);
 
           file_size = dir[i].DIR_FileSize;
           printf("inside file size is %d\n", file_size);
@@ -466,7 +466,7 @@ int main()
               break;
             }
 
-            offset = LBAtoOffset(LowClusterNumber);
+            offset = LBAToOffset(LowClusterNumber);
             fseek(fp, offset, SEEK_SET);
           }
           printf("STILL file size is %d\n", file_size);
@@ -492,7 +492,7 @@ int main()
         
         for (i = 0; i < 16; i++)
         {
-          if(dir[i].DIR_Attr == 0x01 || dir[i].DIR_Attr == 0x10 || dir[i].DIR_Attr == 0x20) //bascially print the acutal files not the junk with it (the deleted files or nulls)
+          if((dir[i].DIR_Attr == 0x01 || dir[i].DIR_Attr == 0x10 || dir[i].DIR_Attr == 0x20) &&  dir[i].DIR_NAME[0] != -27) //bascially print the acutal files not the junk with it (the deleted files or nulls)
           {
             char name[12]; //adding a null terminate to end of file names
             memcpy(name, dir[i].DIR_NAME, 11);
@@ -570,7 +570,7 @@ int main()
                 in++;
               }
             }
-            //printf("%s\n", input_file);
+            printf("%s\n", input_file);
             int i,k;
             for(i=0; i < 16; i++)
             {
@@ -588,23 +588,40 @@ int main()
                     name[q] = '\0';
                   }
                 }
+              
               if(strcasecmp(name, input_file) == 0)
               {
+                printf("-%s-\n", input_file);
                 inside = 1;
-                if(strcmp(token[1],  "..") == 0)
+                if(strcasecmp(input_file,  "..") == 0)
                 {
-                 //go back
+                  printf("-in dot dot-\n");
+                  if(dir[i].DIR_FirstClusterLow==0)
+                  {
+                    get=LBAToOffset(2);
+                  }
+                  else
+                  {
+                    ad = dir[i].DIR_FirstClusterLow;
+                    get=LBAToOffset(ad);
+                  }
+                  fseek(fp, get, SEEK_SET);
+                  int w;
+                  for(w = 0; w < 16; w++)
+                  {
+                    fread(&dir[w],1,32,fp);
+                  }
                 }
                 else
                 {
                   ad = dir[i].DIR_FirstClusterLow;
-                  int get = LBAToOffset(dir[i].DIR_FirstClusterLow);
+                  get = LBAToOffset(dir[i].DIR_FirstClusterLow);
                   fseek(fp, get, SEEK_SET);
                   
                   for(k=0;k< 16; k++)
                   {
                     //printf("-%c-\n", dir[k].DIR_NAME[0]);
-                    
+                    //if(dir[k].DIR_NAME[0] != 0xe5)
                     fread(&dir[k],1,32,fp);
                   }
                   
