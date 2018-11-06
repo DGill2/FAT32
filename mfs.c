@@ -290,6 +290,8 @@ int main()
     //refer to prof video at 9:00
     if (strcasecmp(token[0], "stat") == 0) //needs to print for a specefic given file
     {
+      //if it didnt find file give right error
+      int did_not_find = 0;
       if(file_open == 0) //if file already close
       {
         printf("Error: File system not open.\n");
@@ -346,6 +348,7 @@ int main()
               printf(" Attr is: %d\n", dir[i].DIR_Attr);
               printf("File size is:%d\n", dir[i].DIR_FileSize);
               printf(" Starting Cluster Number is:%d\n\n", dir[i].DIR_FirstClusterLow);
+              did_not_find = 1;
             }
           }
         }
@@ -395,13 +398,20 @@ int main()
               printf(" Attr is: %d\n", dir[i].DIR_Attr);
               printf("File size is:%d\n", dir[i].DIR_FileSize);
               printf(" Starting Cluster Number is:%d\n\n", dir[i].DIR_FirstClusterLow);
+              did_not_find = 1;
             }
           }
         }
       }
+      if (did_not_find == 0)
+        {
+          printf("Error: File not found\n");
+        }
     }
     if(strcasecmp(token[0],"get")==0)
     {
+      //if it didnt find file give right error
+      int did_not_find = 0;
 
       int i;
       char new_name[12];
@@ -434,29 +444,33 @@ int main()
         }
         //printf("new name is %s & token[1] %s\n", new_name, token[1]);
 
-        //printf("new name is %s & token[1] %s\n", new_name, token[1]);
 
         if (strcasecmp(token[1], new_name) == 0)
         {
+          did_not_find = 1;
           //printf("here the name is %s\n\n", new_name);
           FILE *newfp = fopen(new_name, "w");
 
           int file_size;
           int LowClusterNumber = dir[i].DIR_FirstClusterLow;
-          printf("lowCluster is %d of %.11s\n", dir[i].DIR_FirstClusterLow, dir[i].DIR_NAME);
+          //printf("lowCluster is %d of %.11s\n", dir[i].DIR_FirstClusterLow, dir[i].DIR_NAME);
           int offset = LBAToOffset(LowClusterNumber);
 
           file_size = dir[i].DIR_FileSize;
-          printf("inside file size is %d\n", file_size);
+         // printf("inside file size is %d\n", file_size);
+          
+
           fseek(fp, offset, SEEK_SET);
 
-          char get_chars[file_size];
+          unsigned char get_chars[file_size];
           int k;
-          for (k = 0; k < file_size; k++)
+          for (k = 0; k <= file_size; k++)
           {
             fread(&get_chars[k], 1, 1, fp);
           }
-          printf("outside file size is %d\n", file_size);
+        
+          
+        //  printf("outside file size is %d\n", file_size);
 
           while (file_size >= 512)
           {
@@ -468,23 +482,29 @@ int main()
 
             if (LowClusterNumber == -1)
             {
-              printf("next cluster is -1\n");
+            //  printf("next cluster is -1\n");
               break;
             }
 
             offset = LBAToOffset(LowClusterNumber);
             fseek(fp, offset, SEEK_SET);
           }
-          printf("STILL file size is %d\n", file_size);
+
+          
+         // printf("STILL file size is %d\n", file_size);
           if (file_size > 0)
           {
-            printf("file size is > 0\n");
-            fwrite(&get_chars, 1, file_size, newfp);
+           // printf("file size is > 0\n");
+          fwrite(&get_chars, 1, file_size, newfp);
           }
 
           fclose(newfp);
         }
       }
+      if (did_not_find == 0)
+        {
+          printf("Error: File not found\n");
+        }
     }
 
     if(strcasecmp(token[0],"ls")==0)
