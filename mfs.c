@@ -27,7 +27,7 @@
                                 // In this case  white space
                                 // will separate the tokens on our command line
 
-#define MAX_COMMAND_SIZE 255    // The maximum command-line size
+ #define MAX_COMMAND_SIZE 255    // The maximum command-line size
 
 #define MAX_NUM_ARGUMENTS 5     // Mav shell only supports five arguments
 #define BPB_BytsPerSec_Offset 11
@@ -49,6 +49,7 @@
 #define BPB_FATSz32_Size 4
 
 #define BS_VolLab_Offset 36
+#define BS_VolLabb 71
 #define BS_VolLab_Size 11
 
 FILE *fp;
@@ -67,6 +68,8 @@ int32_t   BPB_RootClus;
 int32_t   RootDirSectors =0;
 int32_t   FirstDataSector =0;
 int32_t   FirstSectorofCluster=0;
+
+char dirVolName[11];
 
 int rootDir=0;
 int curDir=0;
@@ -228,6 +231,9 @@ int main()
           //BS_VolLab
           fseek(fp, BS_VolLab_Offset, SEEK_SET);
           fread(&BS_VolLab, BS_VolLab_Size, 1 , fp);
+
+          fseek(fp,BS_VolLabb,SEEK_SET);
+          fread(&dirVolName,1,11,fp);
 
 
           //update the root offset
@@ -503,6 +509,23 @@ int main()
         }
       }
     }
+    if(strcasecmp(token[0],"volume")==0)
+    {
+      if(file_open == 0)
+      {
+        printf("Error: File system is not open.\n");
+        continue;
+      }
+      if(dirVolName == NULL)
+      {
+        printf("Error: Volume not found.\n");
+      }
+      else
+      {
+        printf("Volume Name :'%s'\n",dirVolName);
+      }
+    }
+
     if(strcasecmp(token[0],"cd")==0)
     {
       if(file_open == 0) //if file already close
@@ -551,6 +574,8 @@ int main()
             //first store the first file input name and fseek there and then the next
             int go; //iterate through each of the file input(paths)
             char input_file[12];
+            memset(&input_file,0,12);
+
             int f = strlen(token[1]); //length of while path
              
             int in = 0; //input file storer iterator 
@@ -570,7 +595,9 @@ int main()
                 in++;
               }
             }
-            printf("%s\n", input_file);
+                    
+
+            //printf("%s\n", input_file);
             int i,k;
             for(i=0; i < 16; i++)
             {
@@ -588,14 +615,13 @@ int main()
                     name[q] = '\0';
                   }
                 }
-              
+             
               if(strcasecmp(name, input_file) == 0)
               {
-                printf("-%s-\n", input_file);
                 inside = 1;
                 if(strcasecmp(input_file,  "..") == 0)
                 {
-                  printf("-in dot dot-\n");
+                  //printf("-in dot dot-\n");
                   if(dir[i].DIR_FirstClusterLow==0)
                   {
                     get=LBAToOffset(2);
@@ -620,8 +646,6 @@ int main()
                   
                   for(k=0;k< 16; k++)
                   {
-                    //printf("-%c-\n", dir[k].DIR_NAME[0]);
-                    //if(dir[k].DIR_NAME[0] != 0xe5)
                     fread(&dir[k],1,32,fp);
                   }
                   
