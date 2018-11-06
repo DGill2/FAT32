@@ -13,8 +13,6 @@
 #include <stdint.h>
 #include <ctype.h>
 
-
-
 // string file = dir[i].DIR_NAME;
             // file = file.substr(0,11);
             // cout << file << "\n";
@@ -73,7 +71,7 @@ char dirVolName[11];
 
 int rootDir=0;
 int curDir=0;
-int i, inside=0, ad=0, get=0; //inside is if u inside the dir, if its found, if not the input dir dont exist
+int i, inside=0, ad=0, j; //inside is if u inside the dir, if its found, if not the input dir dont exist
 //ad for the current directory being used (ad for address when passed to LBAToOffset)
 
 struct __attribute__((__packed__)) DirectoryEntry
@@ -103,28 +101,12 @@ int16_t NextLB(uint32_t sector)
   return val;
 }
 
-// char* parseStr(char* in, int s)
-// {
-
-//   char output[12]="";
-  
-//   char* token = strtok(in, " ");
-//   while (token) 
-//   {
-   
-//     strcat(output, token);
-//     token = strtok(NULL, " ");
-    
-//   }
-//   //printf("%s\n", output);
-//   return output;
-// }
-
 int main()
 {
-
+  
   char * cmd_str = (char*) malloc( MAX_COMMAND_SIZE );
   int root_clus_Address;
+  int get=0;
 
   while( 1 )
   {
@@ -402,7 +384,6 @@ int main()
     }
     if(strcasecmp(token[0],"get")==0)
     {
-
       int i;
       char new_name[12];
      
@@ -508,7 +489,16 @@ int main()
           }
         }
       }
+      if(token[1] != NULL)
+      {
+        //printf("ls ..\n");
+        if(strcasecmp(token[1], "..") == 0)
+        {
+        //nun	
+        }
+      }
     }
+    //fseek to BS_volab inside info calculations and print volume name
     if(strcasecmp(token[0],"volume")==0)
     {
       if(file_open == 0)
@@ -516,7 +506,7 @@ int main()
         printf("Error: File system is not open.\n");
         continue;
       }
-      if(dirVolName == NULL)
+      if(dirVolName == NULL) //if not found, creats warning but should works fine
       {
         printf("Error: Volume not found.\n");
       }
@@ -594,32 +584,27 @@ int main()
                 input_file[in] = token[1][go];
                 in++;
               }
-            }
-                    
-
+            }  
             //printf("%s\n", input_file);
             int i,k;
             for(i=0; i < 16; i++)
             {
-                //fseek(fp, ad, SEEK_SET);
+              char name[12]; //adding a null terminate to end of file names
+              memcpy(name, dir[i].DIR_NAME, 11);
+              name[11] = '\0';
 
-                char name[12]; //adding a null terminate to end of file names
-                memcpy(name, dir[i].DIR_NAME, 11);
-                name[11] = '\0';
-
-                int q; 
-                for(q=0; q < 12; q++) //filling empty spaces with null to cmp the folder name
-                {
-                  if(name[q] == ' ')
-                  {
-                    name[q] = '\0';
-                  }
-                }
-             
-              if(strcasecmp(name, input_file) == 0)
+              int q; 
+              for(q=0; q < 12; q++) //filling empty spaces with null to cmp the folder name
               {
-                inside = 1;
-                if(strcasecmp(input_file,  "..") == 0)
+                if(name[q] == ' ')
+                {
+                  name[q] = '\0';
+                }
+              }
+              if(strcasecmp(name, input_file) == 0) //checking if input is directory
+              {
+                inside = 1; //if not, no such dir exist
+                if(strcasecmp(input_file,  "..") == 0) //go back a dir
                 {
                   //printf("-in dot dot-\n");
                   if(dir[i].DIR_FirstClusterLow==0)
@@ -632,13 +617,13 @@ int main()
                     get=LBAToOffset(ad);
                   }
                   fseek(fp, get, SEEK_SET);
-                  int w;
-                  for(w = 0; w < 16; w++)
+                  int k;
+                  for(k = 0; k < 16; k++)
                   {
-                    fread(&dir[w],1,32,fp);
+                    fread(&dir[k],1,32,fp);
                   }
                 }
-                else
+                else //go inside a dir
                 {
                   ad = dir[i].DIR_FirstClusterLow;
                   get = LBAToOffset(dir[i].DIR_FirstClusterLow);
@@ -662,7 +647,8 @@ int main()
       }
     }
     free( working_root );
-
   }
+
+  
   return 0;
 }
