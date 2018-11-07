@@ -1,3 +1,10 @@
+/*
+
+  Eric Zelaya 
+  1000861438
+  Section 003
+
+*/
 //FAT32 file system (file allocation table)
 //how files are stored
 
@@ -257,11 +264,11 @@ int main()
     }
     if (strcasecmp(token[0], "info") == 0) //printing info
     {
-      printf("BPB_BytsPerSec: %d %x\n", BPB_BytsPerSec, BPB_BytsPerSec);
-      printf("BPB_SecPerClus: %d %x\n", BPB_SecPerClus, BPB_SecPerClus);
-      printf("BPB_RsvdSecCnt: %d %x\n", BPB_RsvdSecCnt, BPB_RsvdSecCnt);
-      printf("   BPB_NumFATS: %d %x\n", BPB_NumFATS, BPB_NumFATS);
-      printf("   BPB_FATSz32: %d %x\n", BPB_FATSz32, BPB_FATSz32);
+      printf("\n  BPB_BytsPerSec: %d %x\n", BPB_BytsPerSec, BPB_BytsPerSec);
+      printf("  BPB_SecPerClus: %d %x\n", BPB_SecPerClus, BPB_SecPerClus);
+      printf("  BPB_RsvdSecCnt: %d %x\n", BPB_RsvdSecCnt, BPB_RsvdSecCnt);
+      printf("     BPB_NumFATS: %d %x\n", BPB_NumFATS, BPB_NumFATS);
+      printf("     BPB_FATSz32: %d %x\n\n", BPB_FATSz32, BPB_FATSz32);
     }
 
     //stat should give you info about the file
@@ -277,6 +284,7 @@ int main()
       {
         printf("Error: File system not open.\n");
       }
+      //if user only gives stat and no filename/folder skip
       if (token[1] != NULL)
       {
 
@@ -289,20 +297,20 @@ int main()
         {
           if (token[1][period] == '.') //if we find a period, Lets excute a file** else ** a folder
           {
-            // printf("Found a period\n");
             flag_for_period_found = 1;
           }
         }
         if (flag_for_period_found == 1) //Look for file type
         {
           int i;
-          // printf("Lookign for file!\n");
           for (i = 0; i < 16; i++)
           {
             char name[12]; //adding a null terminate to end of file names
             memcpy(name, dir[i].DIR_NAME, 11);
             name[11] = '\0';
 
+            //add chars to new char
+            //char by char
             char new_name[12];
             int j;
             int g;
@@ -311,7 +319,6 @@ int main()
               if (name[j] != ' ')
               {
                 new_name[g] = name[j];
-                // printf("%c", new_name[g]);
                 g++;
                 new_name[g] = '.';
               }
@@ -323,15 +330,14 @@ int main()
               g++;
               new_name[g] = '\0';
             }
-            //printf("new name is currently %s & token is %s\n", new_name, token[1]);
+
             if (strcasecmp(token[1], new_name) == 0)
             {
               {
-
-                printf("\n%.11s\n", dir[i].DIR_NAME);
-                printf(" Attr is: %d\n", dir[i].DIR_Attr);
-                printf("File size is:%d\n", dir[i].DIR_FileSize);
-                printf(" Starting Cluster Number is:%d\n\n", dir[i].DIR_FirstClusterLow);
+                printf("\n\t%s\n", new_name);
+                printf("\tAttribute is: %d\n", dir[i].DIR_Attr);
+                printf("\tFile size is: %d\n", dir[i].DIR_FileSize);
+                printf("\tStarting Cluster Number is: %d\n\n", dir[i].DIR_FirstClusterLow);
                 did_not_find = 1;
               }
             }
@@ -339,13 +345,9 @@ int main()
         }
         else //Look for folder
         {
-          // printf("Lookign for folder!\n");
-
           //this is not done
           //this will have to change with more if statements
           int i;
-          //fseek(fp, curDir, SEEK_SET);
-
           for (i = 0; i < 16; i++)
           {
             char name[12]; //adding a null terminate to end of file names
@@ -363,25 +365,18 @@ int main()
               if (name[j] != ' ')
               {
                 new_name[g] = name[j];
-                // printf("%c", new_name[g]);
                 g++;
                 new_name[g] = '\0';
               }
             }
-            // printf("\n");
-            //Leave this here so we can see all the real names
-            //printf("new name is %s\n", new_name);
-
-            //printf("%s & %s\n", token[1], token[2]);
 
             if (strcasecmp(token[1], new_name) == 0)
             {
               {
-
-                printf("\n%.11s\n", dir[i].DIR_NAME);
-                printf(" Attr is: %d\n", dir[i].DIR_Attr);
-                printf("File size is:%d\n", dir[i].DIR_FileSize);
-                printf(" Starting Cluster Number is:%d\n\n", dir[i].DIR_FirstClusterLow);
+                printf("\n\t%s\n", new_name);
+                printf("\tAttribute is: %d\n", dir[i].DIR_Attr);
+                printf("\tFile size is: %d\n", dir[i].DIR_FileSize);
+                printf("\tStarting Cluster Number is: %d\n\n", dir[i].DIR_FirstClusterLow);
                 did_not_find = 1;
               }
             }
@@ -392,89 +387,94 @@ int main()
           printf("Error: File not found\n");
         }
       }
+      else
+      {
+        printf("Error: Not a valid command\n");
+      }
     }
     if (strcasecmp(token[0], "get") == 0)
     {
-      int i;
-      char new_name[12];
-      int did_not_find = 0;
-
-      for (i = 0; i < 16; i++)
+      if (token[1] != NULL)
       {
-        char name[12]; //adding a null terminate to end of file names
-        memcpy(name, dir[i].DIR_NAME, 11);
-        name[11] = '\0';
 
-        int j;
-        int g;
-        for (j = 0, g = 0; j < 8; j++)
+        int i;
+        //this is the same as stat to parse and compare strings
+        char new_name[12];
+        int did_not_find = 0;
+
+        for (i = 0; i < 16; i++)
         {
-          if (name[j] != ' ')
+          char name[12]; //adding a null terminate to end of file names
+          memcpy(name, dir[i].DIR_NAME, 11);
+          name[11] = '\0';
+
+          int j;
+          int g;
+          for (j = 0, g = 0; j < 8; j++)
+          {
+            if (name[j] != ' ')
+            {
+              new_name[g] = name[j];
+              g++;
+              new_name[g] = '.';
+            }
+          }
+          g++;
+          for (j = 8; j < 11; j++)
           {
             new_name[g] = name[j];
-            // printf("%c", new_name[g]);
+            new_name[g] = tolower(new_name[g]);
             g++;
-            new_name[g] = '.';
+            new_name[g] = '\0';
           }
-        }
-        g++;
-        for (j = 8; j < 11; j++)
-        {
-          new_name[g] = name[j];
-          new_name[g] = tolower(new_name[g]);
-          g++;
-          new_name[g] = '\0';
-        }
-        //printf("new name is %s & token[1] %s\n", new_name, token[1]);
 
-        if (strcasecmp(token[1], new_name) == 0)
-        {
-          did_not_find = 1;
-          //printf("here the name is %s\n\n", new_name);
-          FILE *newfp = fopen(new_name, "wb");
-
-          int file_size = dir[i].DIR_FileSize;
-          int LowClusterNumber = dir[i].DIR_FirstClusterLow;
-          //printf("lowCluster is %d of %.11s\n", dir[i].DIR_FirstClusterLow, dir[i].DIR_NAME);
-          int offset = LBAToOffset(LowClusterNumber);
-          // printf("inside file size is %d\n", file_size);
-
-          unsigned char *get_chars = (unsigned char *)malloc(file_size);
-          //  printf("outside file size is %d\n", file_size);
-
-          while (file_size > 512)
+          if (strcasecmp(token[1], new_name) == 0)
           {
-            fseek(fp, offset, SEEK_SET);
-            fread(get_chars, 1, 512, fp);
-            file_size = file_size - 512;
+            did_not_find = 1;
+            //open a new file in current directory and give the same name as file you want to copy
+            FILE *newfp = fopen(new_name, "wb");
 
-            //find the new logical block
-            LowClusterNumber = NextLB(LowClusterNumber);
+            int file_size = dir[i].DIR_FileSize;
+            int LowClusterNumber = dir[i].DIR_FirstClusterLow;
+            int offset = LBAToOffset(LowClusterNumber);
+            //make malloc to get empty chars and enough space
+            unsigned char *get_chars = (unsigned char *)malloc(file_size);
 
-            if (LowClusterNumber == -1)
+            while (file_size > 512)
             {
-              //printf("next cluster is -1\n");
-              break;
-            }
+              fseek(fp, offset, SEEK_SET);
+              fread(get_chars, 1, 512, fp);
+              file_size = file_size - 512;
 
-            offset = LBAToOffset(LowClusterNumber);
-            fwrite(get_chars, 1, 512, newfp);
+              //find the new logical block
+              LowClusterNumber = NextLB(LowClusterNumber);
+
+              if (LowClusterNumber == -1)
+              {
+                break;
+              }
+
+              offset = LBAToOffset(LowClusterNumber);
+              fwrite(get_chars, 1, 512, newfp);
+            }
+            if (file_size > 0)
+            {
+              fseek(fp, offset, SEEK_SET);
+              fread(get_chars, 1, file_size, fp);
+              fwrite(get_chars, 1, file_size, newfp);
+            }
+            fclose(newfp);
+            free(get_chars);
           }
-          // printf("STILL file size is %d\n", file_size);
-          if (file_size > 0)
-          {
-            // printf("file size is > 0\n");
-            fseek(fp, offset, SEEK_SET);
-            fread(get_chars, 1, file_size, fp);
-            fwrite(get_chars, 1, file_size, newfp);
-          }
-          fclose(newfp);
-          free(get_chars);
+        }
+        if (did_not_find == 0)
+        {
+          printf("Error: File not found\n");
         }
       }
-      if (did_not_find == 0)
+      else
       {
-        printf("Error: File not found\n");
+        printf("Error: Not a valid command\n");
       }
     }
 
