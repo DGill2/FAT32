@@ -394,6 +394,7 @@ int main()
     {
       int i;
       char new_name[12];
+      int did_not_find = 0;
      
       for (int i = 0; i < 16; i++)
       {
