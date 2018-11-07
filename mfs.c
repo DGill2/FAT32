@@ -68,6 +68,7 @@ int32_t   FirstDataSector =0;
 int32_t   FirstSectorofCluster=0;
 
 char dirVolName[11];
+int did_not_find=0;
 
 int rootDir=0;
 int curDir=0;
@@ -488,6 +489,7 @@ int main()
 
     if(strcasecmp(token[0],"ls")==0)
     {
+      char name[12];
       if(file_open == 0) //if file already close
       {
         printf("Error: File system not open.\n");
@@ -499,7 +501,7 @@ int main()
         {
           if((dir[i].DIR_Attr == 0x01 || dir[i].DIR_Attr == 0x10 || dir[i].DIR_Attr == 0x20) &&  dir[i].DIR_NAME[0] != -27) //bascially print the acutal files not the junk with it (the deleted files or nulls)
           {
-            char name[12]; //adding a null terminate to end of file names
+             //adding a null terminate to end of file names
             memcpy(name, dir[i].DIR_NAME, 11);
             name[11] = '\0';
             printf("%.11s\n", name);
@@ -512,7 +514,66 @@ int main()
         //printf("ls ..\n");
         if(strcasecmp(token[1], "..") == 0)
         {
-        //nun	
+          int l;
+          char name[12];
+          for(l=0; l < 16; l++)
+          {
+             //adding a null terminate to end of file names
+            memcpy(name, dir[l].DIR_NAME, 11);
+            name[11] = '\0';
+
+            int q; 
+            for(q=0; q < 12; q++) //filling empty spaces with null to cmp the folder name
+            {
+              if(name[q] == ' ')
+              {
+                name[q] = '\0';
+              }
+            }
+            if(strcasecmp(token[1],name)==0)
+            {
+              if(dir[l].DIR_FirstClusterLow == 0)
+              {
+                get = LBAToOffset(2);
+              }
+              else
+              {
+                ad = dir[l].DIR_FirstClusterLow;
+                get= LBAToOffset(ad);
+              }
+              fseek(fp, get, SEEK_SET);
+        	    int w;
+        	    for(w = 0; w < 16; w++)
+        	    {
+            		fread(&dir[w],1,32,fp);
+        	    }
+              printf("Previous files: ");
+              for(i = 0; i < 16; i++)
+              {
+                if(dir[i].DIR_Attr == 0x01 || dir[i].DIR_Attr == 0x10 || dir[i].DIR_Attr == 0x20)
+                {
+                  memcpy(name,dir[i].DIR_NAME,11);
+                  name[11] = '\0';
+                        if(dir[i].DIR_Attr == 0x10 )
+                  {
+                    if(name[0] != -27)
+                    {
+                      int u;
+                      for(u = 0; u < 12; u++)
+                      {
+                        if(name[u] == ' ')
+                        {
+                          name[u] = '\0';
+                        }
+                      }
+                      printf("%s ",name);
+                    }
+                  }
+                }
+              }
+              printf("\n");
+            }
+          }
         }
       }
     }
@@ -667,6 +728,5 @@ int main()
     free( working_root );
   }
 
-  
   return 0;
 }
