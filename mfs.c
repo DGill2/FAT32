@@ -423,60 +423,47 @@ int main()
         }
         //printf("new name is %s & token[1] %s\n", new_name, token[1]);
 
-
         if (strcasecmp(token[1], new_name) == 0)
         {
           did_not_find = 1;
           //printf("here the name is %s\n\n", new_name);
-          FILE *newfp = fopen(new_name, "w");
+          FILE *newfp = fopen(new_name, "wb");
 
-          int file_size;
+          int file_size  =dir[i].DIR_FileSize;
           int LowClusterNumber = dir[i].DIR_FirstClusterLow;
           //printf("lowCluster is %d of %.11s\n", dir[i].DIR_FirstClusterLow, dir[i].DIR_NAME);
-          int offset = LBAToOffset(LowClusterNumber);
-
-          file_size = dir[i].DIR_FileSize;
+          int offset = LBAToOffset(LowClusterNumber);     
          // printf("inside file size is %d\n", file_size);
-          
-
-          fseek(fp, offset, SEEK_SET);
-
-          unsigned char get_chars[file_size];
-          int k;
-          for (k = 0; k <= file_size; k++)
-          {
-            fread(&get_chars[k], 1, 1, fp);
-          }
-        
-          
+ 
+          unsigned char * get_chars = (unsigned char * ) malloc(file_size);   
         //  printf("outside file size is %d\n", file_size);
 
-          while (file_size >= 512)
+          while (file_size > 512)
           {
-            fwrite(&get_chars, 1, 512, newfp);
+            fseek(fp, offset, SEEK_SET);
+            fread(get_chars, 1, 512, fp);
             file_size = file_size - 512;
-
+            
             //find the new logical block
             LowClusterNumber = NextLB(LowClusterNumber);
 
             if (LowClusterNumber == -1)
             {
-            //  printf("next cluster is -1\n");
+              printf("next cluster is -1\n");
               break;
             }
 
             offset = LBAToOffset(LowClusterNumber);
-            fseek(fp, offset, SEEK_SET);
+            fwrite(get_chars, 1, 512, newfp);
           }
-
-          
          // printf("STILL file size is %d\n", file_size);
           if (file_size > 0)
           {
            // printf("file size is > 0\n");
-          fwrite(&get_chars, 1, file_size, newfp);
+           fseek(fp, offset, SEEK_SET);
+            fread(get_chars, 1, file_size, fp);
+          fwrite(get_chars, 1, file_size, newfp);
           }
-
           fclose(newfp);
         }
       }
