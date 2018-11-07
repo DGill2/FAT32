@@ -450,7 +450,7 @@ int main()
 
             if (LowClusterNumber == -1)
             {
-              printf("next cluster is -1\n");
+              //printf("next cluster is -1\n");
               break;
             }
 
@@ -466,6 +466,7 @@ int main()
           fwrite(get_chars, 1, file_size, newfp);
           }
           fclose(newfp);
+          free(get_chars);
         }
       }
       if (did_not_find == 0)
